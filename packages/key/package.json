@@ -1,0 +1,41 @@
+{
+	"name": "@skulpture/knob-key",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/index.js",
+	"private": true,
+	"scripts": {
+		"build": "npx @skulpture/serve build",
+		"lint": "eslint --ext .ts --ignore-path .gitignore . --fix && npx @skulpture/serve typecheck",
+		"format": "prettier .  --write",
+		"dev": "nodemon",
+		"start": "pm2 start dist/index.js",
+		"test": "npx @skulpture/serve jest --coverage --verbose",
+		"test.watch": "npx @skulpture/serve jest --watch --coverage --verbose"
+	},
+	"author": "Naveen Mathew",
+	"license": "MIT",
+	"devDependencies": {
+		"@swc/jest": "^0.2.21",
+		"@types/jest": "^28.1.0",
+		"@types/node": "^17.0.39",
+		"@typescript-eslint/eslint-plugin": "^5.27.0",
+		"@typescript-eslint/parser": "^5.27.0",
+		"eslint": "^8.17.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-prettier": "^4.0.0",
+		"jest": "^28.1.0",
+		"nodemon": "^2.0.16",
+		"prettier": "^2.6.2",
+		"supertest": "^6.2.3"
+	},
+	"dependencies": {
+		"@node-redis/json": "^1.0.2",
+		"@sentry/node": "^7.0.0",
+		"@sentry/tracing": "^7.0.0",
+		"@simplewebauthn/server": "^5.2.1",
+		"@skulpture/serve": "^5.8.4",
+		"dotenv": "^16.0.1",
+		"redis": "^4.1.0"
+	}
+}

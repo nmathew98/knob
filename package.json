@@ -1,0 +1,11 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "husky": "^8.0.1",
+    "lerna": "^5.1.4"
+  },
+  "scripts": {
+    "prepare": "husky install"
+  }
+}
