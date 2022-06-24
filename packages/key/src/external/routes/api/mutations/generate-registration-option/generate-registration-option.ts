@@ -35,13 +35,13 @@ export default function generateRegistrationOption(context: ServeContext) {
 				const foundUser = await findUser({ uuid, clientKey });
 
 				if (!foundUser)
-					return addUser({
+					return await addUser({
 						uuid,
 						clientKey,
 						authenticators: [],
 					});
 
-				return registerAuthenticator({ uuid, clientKey });
+				return await registerAuthenticator({ uuid, clientKey });
 			},
 		},
 	});
