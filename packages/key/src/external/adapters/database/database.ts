@@ -12,15 +12,19 @@ const Database: UserDatabase = {
 	use: async () => {
 		if (!redisClientOptions.url) throw new Error("Redis client not specified");
 
-		redis = createClient(redisClientOptions);
+		if (!redis) {
+			redis = createClient(redisClientOptions);
 
-		redis.on("connect", () => {
-			isRedisConnected = true;
-			Consola.log(`Connected to Redis at ${redisClientOptions.url}`);
-		});
-		redis.on("error", () => {
-			Consola.error(`Unable to connect to Redis at ${redisClientOptions.url}`);
-		});
+			redis.on("connect", () => {
+				isRedisConnected = true;
+				Consola.log(`Connected to Redis at ${redisClientOptions.url}`);
+			});
+			redis.on("error", () => {
+				Consola.error(
+					`Unable to connect to Redis at ${redisClientOptions.url}`,
+				);
+			});
+		}
 	},
 	create: async (identifiers, document) => {
 		if (!isRedisConnected) throw new Error("Redis client not connected");

@@ -46,16 +46,14 @@ describe("User", () => {
 	});
 
 	describe("makeUser", () => {
-		it("uses a specified model and schema", async () => {
-			makeUser({ schema: {}, model: "User" });
-
+		it("instantiates the redis client", async () => {
 			expect(Database.use).toBeCalledTimes(1);
 		});
 	});
 
 	describe("find", () => {
 		it("returns null if there are no matching users", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			const result = await user.find({});
 
@@ -64,7 +62,7 @@ describe("User", () => {
 		});
 
 		it("returns a matching user", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			const result = await user.find({ uuid: "123123", clientKey: "123123" });
 
@@ -76,7 +74,7 @@ describe("User", () => {
 
 	describe("save", () => {
 		it("throws an error if uuid is not valid", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			try {
 				await user.save({ uuid: "234234", clientKey: "234234" });
@@ -88,7 +86,7 @@ describe("User", () => {
 		});
 
 		it("creates a user record if fields are valid", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			const result = await user.save({
 				uuid: "345345",
@@ -103,7 +101,7 @@ describe("User", () => {
 
 	describe("update", () => {
 		it("throws an error if uuid is not specified", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			try {
 				await user.update({ clientKey: "567567" }, {});
@@ -114,7 +112,7 @@ describe("User", () => {
 		});
 
 		it("throws an error if clientKey is not specified", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			try {
 				await user.update({ uuid: "567567" }, {});
@@ -125,7 +123,7 @@ describe("User", () => {
 		});
 
 		it("does not update if there are no fields to update", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			const result = await user.update(
 				{ uuid: "234234", clientKey: "234234" },
@@ -137,7 +135,7 @@ describe("User", () => {
 		});
 
 		it("updates a user if fields are valid", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			const result = await user.update(
 				{ uuid: "234234", clientKey: "234234" },
@@ -151,7 +149,7 @@ describe("User", () => {
 
 	describe("delete", () => {
 		it("throws an error if uuid is not specified", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			try {
 				await user.delete({ clientKey: "567567" });
@@ -162,7 +160,7 @@ describe("User", () => {
 		});
 
 		it("throws an error if clientKey is not specified", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			try {
 				await user.delete({ uuid: "567567" });
@@ -173,7 +171,7 @@ describe("User", () => {
 		});
 
 		it("returns the number of records deleted", async () => {
-			const user = makeUser({ schema: {}, model: "User" });
+			const user = makeUser();
 
 			const result = await user.delete({ uuid: "234234", clientKey: "234234" });
 

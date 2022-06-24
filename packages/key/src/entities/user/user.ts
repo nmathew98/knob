@@ -12,11 +12,6 @@ export interface User {
 	) => Promise<number>;
 }
 
-export interface UserConfiguration {
-	schema: Record<string, any>;
-	model: string;
-}
-
 export default function buildMakeUser({
 	Database,
 	Validator,
