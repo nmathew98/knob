@@ -32,6 +32,7 @@
 		"@simplewebauthn/server": "^5.2.1",
 		"@skulpture/serve": "^5.9.2",
 		"dotenv": "^16.0.1",
+		"queueable": "^4.1.4",
 		"redis": "^4.1.0"
 	}
 }

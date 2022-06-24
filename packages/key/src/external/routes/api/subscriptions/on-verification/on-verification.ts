@@ -1,8 +1,13 @@
 import { DatabasePubSub } from "@adapters/database/database";
-import { doesModuleExist, ServeContext } from "@skulpture/serve";
+import { doesModuleExist, H3, ServeContext } from "@skulpture/serve";
 import { GraphQLBoolean, GraphQLNonNull, GraphQLID } from "graphql";
+import { Channel } from "queueable";
 
-export default function onVerification(context: ServeContext) {
+export default function onVerification(
+	context: ServeContext,
+	_: H3.IncomingMessage,
+	response: H3.ServerResponse,
+) {
 	doesModuleExist(context, "Database");
 
 	const Database: DatabasePubSub = context.get("Database");
@@ -18,24 +23,24 @@ export default function onVerification(context: ServeContext) {
 					type: new GraphQLNonNull(GraphQLID),
 				},
 			},
-			subscribe: async (
+			subscribe: async function* (
 				_: any,
 				{ uuid, clientKey }: OnVerificationArguments,
-			) => {
-				const verificationStatus = new Promise(
-					(resolve: (value: boolean | null) => void) => {
-						Database.subscribe("verification", message => {
-							const user = JSON.parse(message);
+			) {
+				const verificationEvents = new Channel();
 
-							if (user.uuid === uuid && user.clientKey === clientKey)
-								return resolve(user.verified as boolean);
+				const client = await Database.subscribe("verification", message => {
+					const user = JSON.parse(message);
 
-							return resolve(null);
-						});
-					},
-				);
+					if (user.uuid === uuid && user.clientKey === clientKey)
+						verificationEvents.push(user.verified);
+				});
 
-				return await verificationStatus;
+				response.on("end", async () => {
+					await Database.unsubscribe(client, "verification");
+				});
+
+				for await (const event of verificationEvents) yield event;
 			},
 		},
 	});

@@ -28,30 +28,13 @@ const Database: UserDatabase & DatabasePubSub = {
 			redis.on("connect", () => {
 				isRedisConnected = true;
 				Consola.log(`Connected to Redis at ${redisClientOptions.url}`);
+
+				redisPublisher = redis.duplicate();
+				redisSubscription = redis.duplicate();
 			});
 			redis.on("error", () => {
 				Consola.error(
 					`Unable to connect to Redis at ${redisClientOptions.url}`,
-				);
-			});
-
-			// This stuff is not really needed since it's all to the same
-			// client but just in case things need to change
-			redisPublisher.on("connect", () => {
-				isRedisPublisherConnected = true;
-				Consola.log(`Publishing events at ${redisClientOptions.url}`);
-			});
-			redis.on("error", () => {
-				Consola.error(`Unable to publish events at ${redisClientOptions.url}`);
-			});
-
-			redisSubscription.on("connect", () => {
-				isRedisSubscriptionConnected = true;
-				Consola.log(`Listening for events at ${redisClientOptions.url}`);
-			});
-			redis.on("error", () => {
-				Consola.error(
-					`Unable to listen for events at ${redisClientOptions.url}`,
 				);
 			});
 		}
@@ -107,7 +90,14 @@ const Database: UserDatabase & DatabasePubSub = {
 		if (!isRedisSubscriptionConnected)
 			throw new Error("Unable to listen for events");
 
-		await redisSubscription.subscribe(channel, handler);
+		const client = redisSubscription.duplicate();
+		await client.subscribe(channel, handler);
+
+		return client;
+	},
+	unsubscribe: async (client: any, channel: string) => {
+		await client.unsubscribe(channel);
+		await client.quit();
 	},
 };
 
@@ -118,7 +108,8 @@ export interface DatabasePubSub {
 	subscribe: (
 		channel: string,
 		handler: (message: string, channel: string) => void,
-	) => Promise<void>;
+	) => Promise<any>;
+	unsubscribe: (client: any, channel: string) => Promise<void>;
 }
 
 function md5(x: Record<string, any>) {
