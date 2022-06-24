@@ -1,14 +1,14 @@
-import { Authenticator, UserRecord } from "@entities/user/user";
 import {
 	generateRegistrationOptions,
 	verifyRegistrationResponse,
 	generateAuthenticationOptions,
 	verifyAuthenticationResponse,
-	VerifyRegistrationResponseOpts,
-	VerifyAuthenticationResponseOpts,
-	VerifiedRegistrationResponse,
 	VerifiedAuthenticationResponse,
+	VerifiedRegistrationResponse,
+	VerifyAuthenticationResponseOpts,
+	VerifyRegistrationResponseOpts,
 } from "@simplewebauthn/server";
+import { Authenticator, UserRecord } from "@entities/user/user";
 
 const rpName = process.env.RP_NAME ?? "Knob";
 const rpID = process.env.RP_ID ?? "localhost";
@@ -74,17 +74,21 @@ const WebAuthn: WebAuthn = {
 	},
 };
 
-interface WebAuthn {
+export default WebAuthn;
+
+export interface WebAuthn {
 	generateRegistrationOptions: (
 		uuid: string,
 		existingAuthenticators: Authenticator[],
 	) => Record<string, any>;
 	verifyRegistrationResponse: (
-		options: VerifyRegistrationResponseOpts,
+		options: Pick<VerifyRegistrationResponseOpts, "credential"> &
+			Pick<VerifyAuthenticationResponseOpts, "expectedChallenge">,
 	) => Promise<VerifiedRegistrationResponse>;
 	generateAuthenticationOptions: (user: UserRecord) => Record<string, any>;
 	verifyAuthenticationOptions: (
-		options: VerifyAuthenticationResponseOpts,
+		options: Pick<VerifyAuthenticationResponseOpts, "credential"> &
+			Pick<VerifyAuthenticationResponseOpts, "expectedChallenge">,
 		existingAuthenticators: Authenticator[],
 	) => Promise<VerifiedAuthenticationResponse>;
 }
