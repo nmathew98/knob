@@ -1,12 +1,15 @@
+import { DatabasePubSub } from "@adapters/database/database";
 import { WebAuthn } from "@adapters/web-authn/web-authn";
 import { User, UserRecord } from "@entities/user/user";
 
 export default function buildVerifyUserRegistration({
 	User,
 	WebAuthn,
+	Database,
 }: {
 	User: User;
 	WebAuthn: WebAuthn;
+	Database: DatabasePubSub;
 }) {
 	return async function verifyUserRegistration(
 		user: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
@@ -38,6 +41,15 @@ export default function buildVerifyUserRegistration({
 				{ authenticators: updatedUser.authenticators },
 			);
 		}
+
+		await Database.publish(
+			"verification",
+			JSON.stringify({
+				uuid: foundUser.uuid,
+				clientKey: foundUser.clientKey,
+				verified: verification.verified,
+			}),
+		);
 
 		return verification.verified;
 	};

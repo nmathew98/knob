@@ -10,13 +10,15 @@ import {
 } from "graphql";
 
 export default function verifyAuthentication(context: ServeContext) {
-	doesModuleExist(context, "User", "WebAuthn");
+	doesModuleExist(context, "User", "WebAuthn", "Database");
 
 	const User = context.get("User");
 	const WebAuthn = context.get("WebAuthn");
+	const Database = context.get("Database");
 	const verifyUserAuthentication = buildVerifyUserAuthentication({
 		User,
 		WebAuthn,
+		Database,
 	});
 
 	return Object.freeze({
