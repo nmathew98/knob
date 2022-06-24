@@ -38,7 +38,7 @@ const Database: UserDatabase = {
 
 		const result = await redis.json.get(md5(identifiers));
 
-		return result as Record<string, any>;
+		return result as Record<string, any> | null;
 	},
 	update: async (identifiers, updates) => {
 		if (!isRedisConnected) throw new Error("Redis client not connected");

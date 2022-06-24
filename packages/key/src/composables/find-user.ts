@@ -4,6 +4,6 @@ export default function buildFindUser({ User }: { User: User }) {
 	return async function findUser(
 		user: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
 	) {
-		return User.find(user);
+		return await User.find(user);
 	};
 }
