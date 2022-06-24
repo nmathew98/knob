@@ -11,9 +11,11 @@ export default function buildAddUser({
 	return async function addUser(user: UserRecord) {
 		const authenticationOptions = WebAuthn.generateAuthenticationOptions(user);
 
-		return await User.save({
+		await User.save({
 			...user,
 			challenge: authenticationOptions.challenge,
 		});
+
+		return authenticationOptions;
 	};
 }

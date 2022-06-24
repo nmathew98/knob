@@ -41,7 +41,7 @@ const WebAuthn: WebAuthn = {
 		const authenticators = user.authenticators;
 
 		return generateAuthenticationOptions({
-			allowCredentials: authenticators.map(authenticator => ({
+			allowCredentials: authenticators?.map(authenticator => ({
 				id: Buffer.from(authenticator.credentialID),
 				type: "public-key",
 			})),

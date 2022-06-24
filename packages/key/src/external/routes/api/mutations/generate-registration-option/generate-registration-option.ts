@@ -8,16 +8,18 @@ import {
 	GraphQLID,
 } from "graphql";
 
-export default function generateAuthenticationOption(context: ServeContext) {
+export default function generateRegistrationOption(context: ServeContext) {
 	doesModuleExist(context, "User", "WebAuthn");
 
 	const User = context.get("User");
 	const WebAuthn = context.get("WebAuthn");
-	const authenticateUser = buildAuthenticateUser({ User, WebAuthn });
+	const addUser = buildAddUser({ User, WebAuthn });
+	const findUser = buildFindUser({ User });
+	const registerAuthenticator = buildRegisterAuthenticator({ User, WebAuthn });
 
 	return Object.freeze({
-		generateAuthenticationOption: {
-			type: PublicKeyCredentialRequestOptionsJSON,
+		generateRegistrationOption: {
+			type: PublicKeyCredentialCreationOptionsJSON,
 			args: {
 				uuid: {
 					type: new GraphQLNonNull(GraphQLID),
@@ -28,28 +30,51 @@ export default function generateAuthenticationOption(context: ServeContext) {
 			},
 			resolve: async (
 				_: any,
-				{ uuid, clientKey }: GenerateAuthenticationOptionArguments,
-			) => await authenticateUser({ uuid, clientKey }),
+				{ uuid, clientKey }: GenerateRegistrationOptionArguments,
+			) => {
+				const foundUser = await findUser({ uuid, clientKey });
+
+				if (!foundUser)
+					return addUser({
+						uuid,
+						clientKey,
+						authenticators: [],
+					});
+
+				return registerAuthenticator({ uuid, clientKey });
+			},
 		},
 	});
 }
 
-interface GenerateAuthenticationOptionArguments {
+interface GenerateRegistrationOptionArguments {
 	uuid: string;
 	clientKey: string;
 }
 
-const PublicKeyCredentialRequestOptionsJSON = new GraphQLObjectType({
-	name: "PublicKeyCredentialRequestOptionsJSON",
+const PublicKeyCredentialCreationOptionsJSON = new GraphQLObjectType({
+	name: "PublicKeyCredentialCreationOptionsJSON",
 	fields: () => ({
+		user: {
+			type: new GraphQLNonNull(PublicKeyCredentialUserEntityJSON),
+		},
 		challenge: {
 			type: new GraphQLNonNull(GraphQLString),
 		},
 		allowCredentials: {
-			type: new GraphQLList(PublicKeyCredentialDescriptorJSON),
+			type: PublicKeyCredentialDescriptorJSON,
 		},
 		extensions: {
 			type: AuthenticationExtensionsClientInputs,
+		},
+	}),
+});
+
+const PublicKeyCredentialUserEntityJSON = new GraphQLObjectType({
+	name: "PublicKeyCredentialUserEntityJSON",
+	fields: () => ({
+		id: {
+			type: new GraphQLNonNull(GraphQLString),
 		},
 	}),
 });

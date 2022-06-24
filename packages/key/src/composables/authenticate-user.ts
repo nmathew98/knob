@@ -8,7 +8,9 @@ export default function buildAuthenticateUser({
 	User: User;
 	WebAuthn: WebAuthn;
 }) {
-	return async function authenticateUser(user: UserRecord) {
+	return async function authenticateUser(
+		user: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
+	) {
 		const foundUser = await User.find(user);
 
 		if (!foundUser) throw new Error("Invalid user");
