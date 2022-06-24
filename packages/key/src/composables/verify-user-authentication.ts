@@ -16,6 +16,7 @@ export default function buildVerifyUserAuthentication({
 
 		if (!foundUser) throw new Error("Invalid user");
 		if (!foundUser.challenge) throw new Error("Invalid challenge");
+		if (!foundUser.authenticators) throw new Error("Invalid authenticators");
 
 		const verification = WebAuthn.verifyAuthenticationResponse(
 			{
@@ -47,7 +48,7 @@ export default function buildVerifyUserAuthentication({
 			authenticator.counter = verification.authenticationInfo.newCounter;
 
 			const updatedUser = { ...foundUser };
-			updatedUser.authenticators.map(a => {
+			updatedUser.authenticators?.map(a => {
 				if (a.credentialID !== authenticator.credentialID) return a;
 
 				return authenticator;

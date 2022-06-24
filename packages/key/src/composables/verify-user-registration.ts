@@ -25,7 +25,7 @@ export default function buildVerifyUserRegistration({
 		if (verification.verified && verification.registrationInfo) {
 			const updatedUser = { ...foundUser };
 
-			updatedUser.authenticators.push({
+			updatedUser.authenticators?.push({
 				credentialID: [...verification.registrationInfo.credentialID],
 				credentialPublicKey: [
 					...verification.registrationInfo.credentialPublicKey,

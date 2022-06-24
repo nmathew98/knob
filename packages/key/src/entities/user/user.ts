@@ -75,7 +75,7 @@ export default function buildMakeUser({
 export interface UserRecord {
 	uuid: string;
 	clientKey: string;
-	authenticators: Authenticator[];
+	authenticators?: Authenticator[];
 	challenge?: string;
 }
 
@@ -97,7 +97,7 @@ export interface Database {
 	update: (
 		identifiers: Record<string, any>,
 		updates: Record<string, any>,
-	) => Promise<number>;
+	) => Promise<Record<string, any>>;
 	delete: (identifiers: Record<string, any>) => Promise<number>;
 }
 

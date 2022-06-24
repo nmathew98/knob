@@ -15,6 +15,8 @@ const Database: UserDatabase = {
 		if (!redis) {
 			redis = createClient(redisClientOptions);
 
+			redis.connect();
+
 			redis.on("connect", () => {
 				isRedisConnected = true;
 				Consola.log(`Connected to Redis at ${redisClientOptions.url}`);
@@ -43,11 +45,12 @@ const Database: UserDatabase = {
 	update: async (identifiers, updates) => {
 		if (!isRedisConnected) throw new Error("Redis client not connected");
 
-		const existing =
-			(await redis.json.get(md5(identifiers))) || Object.create(null);
+		const existing = await redis.json.get(md5(identifiers));
+
+		if (!existing) throw new Error("Unable to find document");
 
 		const updated = {
-			...existing,
+			...(existing as Record<string, any>),
 			...updates,
 		};
 
