@@ -39,23 +39,19 @@ const Database: UserDatabase & DatabasePubSub = {
 			// client but just in case things need to change
 			redisPublisher.on("connect", () => {
 				isRedisPublisherConnected = true;
-				Consola.log(`Connected to Redis at ${redisClientOptions.url}`);
+				Consola.log(`Publishing events at ${redisClientOptions.url}`);
 			});
 			redis.on("error", () => {
-				Consola.error(
-					`Unable to connect to Redis at ${redisClientOptions.url}`,
-				);
+				Consola.error(`Unable to publish events at ${redisClientOptions.url}`);
 			});
 
 			redisSubscription.on("connect", () => {
 				isRedisSubscriptionConnected = true;
-				Consola.log(
-					`Listening for verification events at ${redisClientOptions.url}`,
-				);
+				Consola.log(`Listening for events at ${redisClientOptions.url}`);
 			});
 			redis.on("error", () => {
 				Consola.error(
-					`Unable to listen for verification events at ${redisClientOptions.url}`,
+					`Unable to listen for events at ${redisClientOptions.url}`,
 				);
 			});
 		}
@@ -72,7 +68,9 @@ const Database: UserDatabase & DatabasePubSub = {
 
 		const result = await redis.json.get(md5(identifiers));
 
-		return result as Record<string, any> | null;
+		if (!result) return null;
+
+		return result as Record<string, any>;
 	},
 	update: async (identifiers, updates) => {
 		if (!isRedisConnected) throw new Error("Redis client not connected");
@@ -98,31 +96,31 @@ const Database: UserDatabase & DatabasePubSub = {
 		return deleteCount;
 	},
 	publish: async (channel: string, message: string) => {
-		if (!isRedisPublisherConnected)
-			throw new Error("Redis client not connected");
+		if (!isRedisPublisherConnected) throw new Error("Unable to publish events");
 
 		await redisPublisher.publish(channel, message);
 	},
-	subscribe: async (channel: string, handler: (message: string) => void) => {
+	subscribe: async (
+		channel: string,
+		handler: (message: string, channel: string) => void,
+	) => {
 		if (!isRedisSubscriptionConnected)
-			throw new Error("Not listening for events");
+			throw new Error("Unable to listen for events");
 
-		await redisSubscription.subscribe(channel, (message: string) => {
-			handler(message);
-		});
+		await redisSubscription.subscribe(channel, handler);
 	},
 };
 
 export default Database;
 
-function md5(x: Record<string, any>) {
-	return crypto.createHash("md5").update(JSON.stringify(x)).digest("hex");
-}
-
 export interface DatabasePubSub {
 	publish: (channel: string, message: string) => Promise<void>;
 	subscribe: (
 		channel: string,
-		handler: (message: string) => void,
+		handler: (message: string, channel: string) => void,
 	) => Promise<void>;
+}
+
+function md5(x: Record<string, any>) {
+	return crypto.createHash("md5").update(JSON.stringify(x)).digest("hex");
 }
