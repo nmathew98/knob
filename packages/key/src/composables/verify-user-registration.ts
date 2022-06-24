@@ -17,9 +17,23 @@ export default function buildVerifyUserRegistration({
 		if (!foundUser) throw new Error("Invalid user");
 		if (!foundUser.challenge) throw new Error("Invalid challenge");
 
-		return WebAuthn.verifyRegistrationResponse({
+		const verification = await WebAuthn.verifyRegistrationResponse({
 			credential: credential as any,
 			expectedChallenge: foundUser.challenge as string,
 		});
+
+		if (verification.verified && verification.registrationInfo) {
+			const updatedUser = { ...foundUser };
+
+			updatedUser.authenticators.push({
+				credentialID: [...verification.registrationInfo.credentialID],
+				credentialPublicKey: [
+					...verification.registrationInfo.credentialPublicKey,
+				],
+				counter: verification.registrationInfo.counter,
+			});
+		}
+
+		return verification.verified;
 	};
 }
