@@ -39,6 +39,9 @@ export default function buildMakeUser({
 				if (!(await Validator.isUuidValid(user.uuid, user.clientKey)))
 					throw new Error("Invalid uuid");
 
+				if (!(await Validator.isClientKeyValid(user.clientKey)))
+					throw new Error("Invalid client key");
+
 				const identifiers: Partial<UserRecord> = {
 					uuid: user.uuid,
 					clientKey: user.clientKey,
@@ -103,4 +106,5 @@ export interface Database {
 
 export interface Validator {
 	isUuidValid: (uuid: string, clientKey: string) => Promise<boolean>;
+	isClientKeyValid: (clientKey: string) => Promise<boolean>;
 }

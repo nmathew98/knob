@@ -7,6 +7,15 @@ const Validator: UserValidator = {
 
 		return !foundUser;
 	},
+	isClientKeyValid: async clientKey => {
+		const clientKeys = await Database.find({ store: "clientKey" });
+
+		if (!clientKeys) return true;
+
+		if (clientKeys.keys.includes(clientKey)) return true;
+
+		return false;
+	},
 };
 
 export default Validator;

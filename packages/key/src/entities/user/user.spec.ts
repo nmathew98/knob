@@ -6,6 +6,7 @@ describe("User", () => {
 	let makeUser: any;
 
 	beforeEach(() => {
+		const clientKeys = ["123123", "234234", "345345"];
 		const users = [
 			{ uuid: "123123", clientKey: "123123" },
 			{ uuid: "234234", clientKey: "234234" },
@@ -40,6 +41,9 @@ describe("User", () => {
 							(user: any) => user.uuid === uuid && user.clientKey === clientKey,
 						),
 				),
+			isClientKeyValid: jest
+				.fn()
+				.mockImplementation(clientKey => clientKeys.includes(clientKey)),
 		};
 
 		makeUser = buildMakeUser({ Database, Validator });
@@ -85,6 +89,18 @@ describe("User", () => {
 			}
 		});
 
+		it("throws an error if client key is not valid", async () => {
+			const user = makeUser();
+
+			try {
+				await user.save({ uuid: "234234", clientKey: "567567" });
+			} catch (error: any) {
+				expect(error.message).toStrictEqual("Invalid client key");
+				expect(Database.create).toBeCalledTimes(0);
+				expect(Validator.isUuidValid).toBeCalledTimes(1);
+			}
+		});
+
 		it("creates a user record if fields are valid", async () => {
 			const user = makeUser();
 
@@ -96,6 +112,7 @@ describe("User", () => {
 			expect(result).toStrictEqual("345345");
 			expect(Database.create).toBeCalledTimes(1);
 			expect(Validator.isUuidValid).toBeCalledTimes(1);
+			expect(Validator.isClientKeyValid).toBeCalledTimes(1);
 		});
 	});
 
