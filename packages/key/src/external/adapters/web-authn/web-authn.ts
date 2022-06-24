@@ -37,7 +37,7 @@ const WebAuthn: WebAuthn = {
 			expectedOrigin: origin,
 			expectedRPID: rpID,
 		}),
-	generateAuthenticationOptions: async user => {
+	generateAuthenticationOptions: user => {
 		const authenticators = user.authenticators;
 
 		return generateAuthenticationOptions({
@@ -48,7 +48,7 @@ const WebAuthn: WebAuthn = {
 			userVerification: "preferred",
 		});
 	},
-	verifyAuthenticationOptions: async (options, existingAuthenticators) => {
+	verifyAuthenticationResponse: (options, existingAuthenticators) => {
 		const authenticator = existingAuthenticators
 			.filter(
 				authenticator =>
@@ -86,9 +86,9 @@ export interface WebAuthn {
 			Pick<VerifyAuthenticationResponseOpts, "expectedChallenge">,
 	) => Promise<VerifiedRegistrationResponse>;
 	generateAuthenticationOptions: (user: UserRecord) => Record<string, any>;
-	verifyAuthenticationOptions: (
+	verifyAuthenticationResponse: (
 		options: Pick<VerifyAuthenticationResponseOpts, "credential"> &
 			Pick<VerifyAuthenticationResponseOpts, "expectedChallenge">,
 		existingAuthenticators: Authenticator[],
-	) => Promise<VerifiedAuthenticationResponse>;
+	) => VerifiedAuthenticationResponse;
 }

@@ -32,6 +32,11 @@ export default function buildVerifyUserRegistration({
 				],
 				counter: verification.registrationInfo.counter,
 			});
+
+			await User.update(
+				{ uuid: foundUser.uuid, clientKey: foundUser.clientKey },
+				{ authenticators: updatedUser.authenticators },
+			);
 		}
 
 		return verification.verified;

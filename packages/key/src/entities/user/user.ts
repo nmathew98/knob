@@ -5,7 +5,7 @@ export interface User {
 	save: (user: UserRecord) => Promise<string>;
 	update: (
 		identifiers: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
-		updates: Pick<UserRecord, "challenge">,
+		updates: Partial<UserRecord>,
 	) => Promise<boolean>;
 	delete: (
 		identifiers: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
@@ -37,6 +37,7 @@ export default function buildMakeUser({
 					uuid: foundUser.uuid,
 					clientKey: foundUser.clientKey,
 					challenge: foundUser.challenge,
+					authenticators: foundUser.authenticators,
 				};
 			},
 			save: async user => {
