@@ -48,7 +48,7 @@ export default function buildMakeUser({
 					clientKey: user.clientKey,
 				};
 
-				await Database.create(identifiers, user);
+				await Database.create(identifiers, { ...user, authenticators: [] });
 
 				return user.uuid;
 			},
@@ -79,7 +79,14 @@ export default function buildMakeUser({
 export interface UserRecord {
 	uuid: string;
 	clientKey: string;
+	authenticators: Authenticator[];
 	challenge?: string;
+}
+
+export interface Authenticator {
+	credentialID: number[];
+	credentialPublicKey: number[];
+	counter: number;
 }
 
 export interface Database {
