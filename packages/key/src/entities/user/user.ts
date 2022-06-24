@@ -58,9 +58,13 @@ export default function buildMakeUser({
 
 				if (!Object.keys(updates).length) return true;
 
-				await Database.update(identifiers, updates);
+				const sanitizedUpdates = { ...updates };
+				delete sanitizedUpdates.uuid;
+				delete sanitizedUpdates.clientKey;
 
-				return true;
+				const result = await Database.update(identifiers, sanitizedUpdates);
+
+				return result;
 			},
 			delete: async identifiers => {
 				if (!identifiers.uuid) throw new Error("Uuid must be specified");

@@ -6,11 +6,9 @@ import crypto from "crypto";
 const redisClientOptions = { url: process.env.REDIS_CLIENT };
 
 let isRedisConnected = false;
-let isRedisPublisherConnected = false;
-let isRedisSubscriptionConnected = false;
 let redis: ReturnType<typeof createClient>;
-let redisPublisher: ReturnType<typeof createClient>;
-let redisSubscription: ReturnType<typeof createClient>;
+
+const clients = Object.create(null);
 
 const Database: UserDatabase & DatabasePubSub = {
 	use: async () => {
@@ -18,19 +16,12 @@ const Database: UserDatabase & DatabasePubSub = {
 
 		if (!redis) {
 			redis = createClient(redisClientOptions);
-			redisPublisher = createClient(redisClientOptions);
-			redisSubscription = createClient(redisClientOptions);
 
 			redis.connect();
-			redisPublisher.connect();
-			redisSubscription.connect();
 
 			redis.on("connect", () => {
 				isRedisConnected = true;
 				Consola.log(`Connected to Redis at ${redisClientOptions.url}`);
-
-				redisPublisher = redis.duplicate();
-				redisSubscription = redis.duplicate();
 			});
 			redis.on("error", () => {
 				Consola.error(
@@ -79,18 +70,15 @@ const Database: UserDatabase & DatabasePubSub = {
 		return deleteCount;
 	},
 	publish: async (channel: string, message: string) => {
-		if (!isRedisPublisherConnected) throw new Error("Unable to publish events");
+		if (!clients[channel]) clients[channel] = redis.duplicate();
 
-		await redisPublisher.publish(channel, message);
+		await clients[channel].publish(channel, message);
 	},
 	subscribe: async (
 		channel: string,
 		handler: (message: string, channel: string) => void,
 	) => {
-		if (!isRedisSubscriptionConnected)
-			throw new Error("Unable to listen for events");
-
-		const client = redisSubscription.duplicate();
+		const client = redis.duplicate();
 		await client.subscribe(channel, handler);
 
 		return client;

@@ -19,7 +19,7 @@ export default function deleteUser(context: ServeContext) {
 				},
 			},
 			resolve: async (_: any, { uuid, clientKey }: DeleteUserArguments) =>
-				!(await deleteUser({ uuid, clientKey })),
+				!!(await deleteUser({ uuid, clientKey })),
 		},
 	});
 }

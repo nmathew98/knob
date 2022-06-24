@@ -37,6 +37,7 @@ export default function onVerification(
 				});
 
 				response.on("end", async () => {
+					verificationEvents.push(false, true);
 					await Database.unsubscribe(client, "verification");
 				});
 

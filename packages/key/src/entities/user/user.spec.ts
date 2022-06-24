@@ -28,7 +28,22 @@ describe("User", () => {
 						)
 						.pop(),
 				),
-			update: jest.fn(),
+			update: jest.fn().mockImplementation((identifiers, updates) => {
+				const matchingIndex = users.findIndex(
+					user =>
+						user.uuid === identifiers.uuid &&
+						user.clientKey === identifiers.clientKey,
+				);
+
+				let matchingUser: any = users[matchingIndex];
+
+				matchingUser = {
+					...matchingUser,
+					...updates,
+				};
+
+				return matchingUser;
+			}),
 			delete: jest.fn().mockImplementation(() => 1),
 		};
 
@@ -151,6 +166,19 @@ describe("User", () => {
 			expect(result).toStrictEqual(true);
 		});
 
+		it("does not update a users uuid or client keys", async () => {
+			const user = makeUser();
+
+			const result = await user.update(
+				{ uuid: "234234", clientKey: "234234" },
+				{ uuid: "123123", clientKey: "123123", challenge: "abcdef" },
+			);
+
+			expect(Database.update).toBeCalledTimes(1);
+			expect(result.uuid).toStrictEqual("234234");
+			expect(result.clientKey).toStrictEqual("234234");
+		});
+
 		it("updates a user if fields are valid", async () => {
 			const user = makeUser();
 
@@ -160,7 +188,7 @@ describe("User", () => {
 			);
 
 			expect(Database.update).toBeCalledTimes(1);
-			expect(result).toStrictEqual(true);
+			expect(result.challenge).toStrictEqual("abcdef");
 		});
 	});
 
