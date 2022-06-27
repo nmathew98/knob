@@ -1,8 +1,9 @@
-import buildMakeUser, { Database, Validator } from "./user";
+import buildMakeUser, { Crypto, Database, Validator } from "./user";
 
 describe("User", () => {
 	let Database: Database;
 	let Validator: Validator;
+	let Crypto: Crypto;
 	let makeUser: any;
 
 	beforeEach(() => {
@@ -17,17 +18,21 @@ describe("User", () => {
 			create: jest.fn().mockImplementation(user => {
 				users.push(user);
 			}),
-			find: jest
-				.fn()
-				.mockImplementation(identifiers =>
-					users
-						.filter(
-							user =>
-								user.uuid === identifiers.uuid &&
-								user.clientKey === identifiers.clientKey,
-						)
-						.pop(),
-				),
+			find: jest.fn().mockImplementation(identifiers => {
+				if (identifiers.store) {
+					return {
+						"123123": "123123",
+					};
+				}
+
+				return users
+					.filter(
+						user =>
+							user.uuid === identifiers.uuid &&
+							user.clientKey === identifiers.clientKey,
+					)
+					.pop();
+			}),
 			update: jest.fn().mockImplementation((identifiers, updates) => {
 				const matchingIndex = users.findIndex(
 					user =>
@@ -61,7 +66,11 @@ describe("User", () => {
 				.mockImplementation(clientKey => clientKeys.includes(clientKey)),
 		};
 
-		makeUser = buildMakeUser({ Database, Validator });
+		Crypto = {
+			random: jest.fn(),
+		};
+
+		makeUser = buildMakeUser({ Database, Validator, Crypto });
 	});
 
 	describe("makeUser", () => {
@@ -85,7 +94,7 @@ describe("User", () => {
 
 			const result = await user.find({ uuid: "123123", clientKey: "123123" });
 
-			expect(Database.find).toBeCalledTimes(1);
+			expect(Database.find).toBeCalledTimes(2);
 			expect(!!result).toStrictEqual(true);
 			expect(!Array.isArray(result)).toStrictEqual(true);
 		});

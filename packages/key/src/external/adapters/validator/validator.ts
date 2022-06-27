@@ -8,7 +8,7 @@ const Validator: UserValidator = {
 		return !foundUser;
 	},
 	isClientKeyValid: async clientKey => {
-		const clientKeys = await Database.find({ store: "clientKey" });
+		const clientKeys = await Database.find({ store: "clientKeys" });
 
 		if (!clientKeys) return true;
 

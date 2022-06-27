@@ -5,6 +5,9 @@ export default {
 		environment: "development",
 	},
 	routes: {
+		api: {
+			protect: false,
+		},
 		storage: {
 			enabled: false,
 		},

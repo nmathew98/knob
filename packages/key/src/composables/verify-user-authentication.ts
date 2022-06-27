@@ -69,6 +69,7 @@ export default function buildVerifyUserAuthentication({
 				uuid: foundUser.uuid,
 				clientKey: foundUser.clientKey,
 				verified: verification.verified,
+				secret: foundUser.secret,
 			}),
 		);
 

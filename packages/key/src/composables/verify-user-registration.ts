@@ -48,6 +48,7 @@ export default function buildVerifyUserRegistration({
 				uuid: foundUser.uuid,
 				clientKey: foundUser.clientKey,
 				verified: verification.verified,
+				secret: foundUser.secret,
 			}),
 		);
 
