@@ -1,5 +1,10 @@
 import { doesModuleExist, ServeContext } from "@skulpture/serve";
-import { GraphQLNonNull, GraphQLString, GraphQLID } from "graphql";
+import {
+	GraphQLNonNull,
+	GraphQLString,
+	GraphQLID,
+	GraphQLObjectType,
+} from "graphql";
 
 export default function registerClientKey(context: ServeContext) {
 	doesModuleExist(context, "User");
@@ -9,9 +14,9 @@ export default function registerClientKey(context: ServeContext) {
 
 	return Object.freeze({
 		registerClientKey: {
-			type: new GraphQLNonNull(GraphQLString),
+			type: new GraphQLNonNull(ClientRegistrationInformation),
 			args: {
-				clientKey: new GraphQLNonNull(GraphQLID),
+				clientKey: GraphQLID,
 			},
 			resolve: async (_: any, { clientKey }: RegisterClientKeyArguments) =>
 				await registerClientKey(clientKey),
@@ -20,5 +25,18 @@ export default function registerClientKey(context: ServeContext) {
 }
 
 interface RegisterClientKeyArguments {
-	clientKey: string;
+	clientKey: string | void;
 }
+
+const ClientRegistrationInformation = new GraphQLObjectType({
+	name: "ClientRegistrationInformation",
+	description: "The secret and UUID associated with a client",
+	fields: () => ({
+		secret: {
+			type: new GraphQLNonNull(GraphQLString),
+		},
+		key: {
+			type: new GraphQLNonNull(GraphQLString),
+		},
+	}),
+});

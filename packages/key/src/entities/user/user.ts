@@ -7,7 +7,9 @@ export interface User {
 		identifiers: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
 		updates: Partial<UserRecord>,
 	) => Promise<boolean>;
-	generateSecret: (key: string) => Promise<string>;
+	generateSecret: (
+		key?: string | void,
+	) => Promise<{ secret: string; key: string }>;
 	delete: (
 		identifiers: Pick<UserRecord, "uuid"> & Pick<UserRecord, "clientKey">,
 	) => Promise<number>;
@@ -17,10 +19,12 @@ export default function buildMakeUser({
 	Database,
 	Validator,
 	Crypto,
+	Uuid,
 }: {
 	Database: Database;
 	Validator: Validator;
 	Crypto: Crypto;
+	Uuid: Uuid;
 }) {
 	Database.use();
 
@@ -82,23 +86,29 @@ export default function buildMakeUser({
 				return result;
 			},
 			generateSecret: async key => {
+				if (key)
+					if (!(await Validator.isClientKeyValid(key)))
+						throw new Error("Invalid client key");
+
+				const keyToUse = key || Uuid.get();
+
 				const secret = await Crypto.random();
 
 				const secrets = (await Database.find({ store: "secrets" })) || {
 					store: "secrets",
 				};
-				secrets[key] = secret;
+				secrets[keyToUse] = secret;
 
 				const clientKeys = (await Database.find({ store: "clientKeys" })) || {
 					store: "clientKeys",
 					keys: [],
 				};
-				clientKeys.keys.push(key);
+				if (!clientKeys.keys.includes(keyToUse)) clientKeys.keys.push(keyToUse);
 
 				await Database.update({ store: "secrets" }, secrets);
 				await Database.update({ store: "clientKeys" }, clientKeys);
 
-				return secret;
+				return { secret, key: keyToUse };
 			},
 			delete: async identifiers => {
 				if (!identifiers.uuid) throw new Error("Uuid must be specified");
@@ -150,4 +160,8 @@ export interface Validator {
 
 export interface Crypto {
 	random: () => Promise<string>;
+}
+
+export interface Uuid {
+	get: () => string;
 }
