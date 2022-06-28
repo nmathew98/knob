@@ -28,6 +28,7 @@
 		"@headlessui/vue": "^1.6.5",
 		"graphql": "^16.5.0",
 		"graphql-sse": "^1.2.3",
+		"json-to-graphql-query": "^2.2.4",
 		"qrcode": "^1.5.0",
 		"urql": "^2.2.2"
 	}
