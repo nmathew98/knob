@@ -18,7 +18,12 @@ export default defineNuxtConfig({
 			],
 			script: [
 				{
-					src: "https://unpkg.com/ionicons@5.0.0/dist/ionicons.js",
+					type: "module",
+					src: "https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.esm.js",
+				},
+				{
+					nomodule: "",
+					src: "https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.js",
 				},
 			],
 		},

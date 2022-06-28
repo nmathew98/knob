@@ -1,15 +1,16 @@
 const defaultTheme = require("tailwindcss/defaultTheme");
 
 module.exports = {
+	mode: "jit",
 	content: [
 		"./assets/**/*.css",
 		"./components/*.{vue,js}",
 		"./components/**/*.{vue,js}",
 		"./pages/*.vue",
 		"./pages/**/*.vue",
+		"./layouts/*.vue",
 		"./plugins/**/*.{js,ts}",
-		"./*.{vue,js,ts}",
-		"./nuxt.config.{js,ts}",
+		"./app.{vue,js,ts}",
 	],
 	theme: {
 		extend: {
