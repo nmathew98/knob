@@ -1,3 +1,5 @@
+const defaultTheme = require("tailwindcss/defaultTheme");
+
 module.exports = {
 	content: [
 		"./assets/**/*.css",
@@ -10,7 +12,11 @@ module.exports = {
 		"./nuxt.config.{js,ts}",
 	],
 	theme: {
-		extend: {},
+		extend: {
+			fontFamily: {
+				sans: ["Inter var", ...defaultTheme.fontFamily.sans],
+			},
+		},
 	},
 	plugins: [require("@tailwindcss/typography"), require("@tailwindcss/forms")],
 };
