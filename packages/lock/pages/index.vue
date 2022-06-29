@@ -9,7 +9,14 @@
 		RegistrationCredentialJSON,
 	} from "~~/graphql/index/verify-registration";
 	import { useQuery, useMutation, useSubscription } from "@urql/vue";
+	import {
+		startAuthentication,
+		startRegistration,
+		browserSupportsWebauthn,
+	} from "@simplewebauthn/browser";
+	import { Ref } from "vue";
 
+	const request = useRequestHeaders();
 	const route = useRoute();
 	const query = route.query;
 	const invalid = ref(false);
@@ -17,9 +24,19 @@
 	if (
 		(!query.authentication && !query.registration) ||
 		(query.authentication && query.registration) ||
-		!query.clientKey
+		!query.clientKey ||
+		!(request["KAS-REDIRECT-TO"] || request["kas-redirect-to"]) ||
+		!browserSupportsWebauthn()
 	)
 		invalid.value = true;
+
+	let redirectTo: string | URL =
+		request["KAS-REDIRECT-TO"] || request["kas-redirect-to"];
+	try {
+		redirectTo = new URL(redirectTo);
+	} catch (error: any) {
+		invalid.value = true;
+	}
 
 	for (const key in query)
 		if (typeof query[key] !== "string") invalid.value = true;
@@ -72,10 +89,99 @@
 				);
 	}
 
-	const onVerification = useSubscription({
-		query: onVerificationQuery,
+	const verificationOptionMutation = useMutation(generateOptionQuery);
+
+	const qrCodeUri = useFrontend();
+	const searchParams = new URLSearchParams();
+
+	if (query.authentication)
+		searchParams.append("authentication", `${query.authentication}`);
+	else searchParams.append("registration", `${query.registration}`);
+	searchParams.append("clientKey", `${query.clientKey}`);
+	searchParams.append("redirect", "false");
+
+	let verificationResponse: Ref<Record<string, any>> = ref();
+
+	const authenticateUser = async () => {
+		let authorizationResponse: Record<string, any>;
+
+		if (query.registration) {
+			await verificationOptionMutation.executeMutation(Object.create(null));
+
+			if (verificationOptionMutation.data) {
+				try {
+					authorizationResponse = await startRegistration(
+						verificationOptionMutation.data.value,
+					);
+				} catch (error: any) {
+					invalid.value = true;
+
+					if (error.name === "InvalidStateError") {
+						// Authenticator already registered
+					}
+				}
+
+				const verifiedResponseResult = await useQuery({
+					query: verificationQuery(
+						authorizationResponse as RegistrationCredentialJSON,
+					),
+				});
+
+				if (verifiedResponseResult.data)
+					verificationResponse.value = verifiedResponseResult.data;
+			}
+		}
+
+		if (query.authentication) {
+			await verificationOptionMutation.executeMutation(Object.create(null));
+
+			if (verificationOptionMutation.data) {
+				try {
+					authorizationResponse = await startAuthentication(
+						verificationOptionMutation.data.value,
+					);
+				} catch (error: any) {
+					invalid.value = true;
+				}
+
+				const verifiedResponseResult = await useQuery({
+					query: verificationQuery(
+						authorizationResponse as AuthenticationCredentialJSON,
+					),
+				});
+
+				if (verifiedResponseResult.data)
+					verificationResponse.value = verifiedResponseResult.data;
+			}
+		}
+	};
+
+	onMounted(() => {
+		document.addEventListener("keydown", async event => {
+			switch (event.key) {
+				case "Enter":
+					await authenticateUser();
+					break;
+				default:
+					break;
+			}
+		});
 	});
-	const verificationOption = useMutation(generateOptionQuery);
+
+	const authorizationToken = ref("");
+	/**
+	 * This is a one off subscription maybe it's better to
+	 * just use Wonka streams and the client directly
+	 */
+	useSubscription(
+		{
+			query: onVerificationQuery,
+		},
+		(_, response) => {
+			if (!authorizationToken.value)
+				authorizationToken.value = response.onVerification;
+		},
+	);
 </script>
 
 <template>
@@ -85,7 +191,7 @@
 				Scan the QR code below on your mobile device to authenticate with your
 				phone
 			</h1>
-			<QrCode value="hello world"></QrCode>
+			<QrCode :value="`${`${qrCodeUri}?${searchParams.toString()}`}`"></QrCode>
 			<h3
 				class="text-sm md:text-md font-light max-w-md text-center uppercase -mt-10">
 				or insert a security key on your computer
