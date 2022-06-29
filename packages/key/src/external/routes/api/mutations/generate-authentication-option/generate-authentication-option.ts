@@ -46,7 +46,7 @@ const PublicKeyCredentialRequestOptionsJSON = new GraphQLObjectType({
 			type: new GraphQLNonNull(GraphQLString),
 		},
 		allowCredentials: {
-			type: new GraphQLList(PublicKeyCredentialDescriptorJSON),
+			type: new GraphQLList(AuthenticationPublicKeyCredentialDescriptorJSON),
 		},
 		extensions: {
 			type: AuthenticationExtensionsClientInputs,
@@ -54,8 +54,8 @@ const PublicKeyCredentialRequestOptionsJSON = new GraphQLObjectType({
 	}),
 });
 
-const PublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
-	name: "PublicKeyCredentialDescriptorJSON",
+const AuthenticationPublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
+	name: "AuthenticationPublicKeyCredentialDescriptorJSON",
 	fields: () => ({
 		id: {
 			type: new GraphQLNonNull(GraphQLString),

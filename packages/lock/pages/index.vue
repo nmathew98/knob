@@ -113,6 +113,15 @@
 					authorizationResponse = await startRegistration(
 						verificationOptionMutation.data.value,
 					);
+
+					const verifiedResponseResult = await useQuery({
+						query: verificationQuery(
+							authorizationResponse as RegistrationCredentialJSON,
+						),
+					});
+
+					if (verifiedResponseResult.data)
+						verificationResponse.value = verifiedResponseResult.data;
 				} catch (error: any) {
 					invalid.value = true;
 
@@ -120,15 +129,6 @@
 						// Authenticator already registered
 					}
 				}
-
-				const verifiedResponseResult = await useQuery({
-					query: verificationQuery(
-						authorizationResponse as RegistrationCredentialJSON,
-					),
-				});
-
-				if (verifiedResponseResult.data)
-					verificationResponse.value = verifiedResponseResult.data;
 			}
 		}
 
@@ -140,18 +140,18 @@
 					authorizationResponse = await startAuthentication(
 						verificationOptionMutation.data.value,
 					);
+
+					const verifiedResponseResult = await useQuery({
+						query: verificationQuery(
+							authorizationResponse as AuthenticationCredentialJSON,
+						),
+					});
+
+					if (verifiedResponseResult.data)
+						verificationResponse.value = verifiedResponseResult.data;
 				} catch (error: any) {
 					invalid.value = true;
 				}
-
-				const verifiedResponseResult = await useQuery({
-					query: verificationQuery(
-						authorizationResponse as AuthenticationCredentialJSON,
-					),
-				});
-
-				if (verifiedResponseResult.data)
-					verificationResponse.value = verifiedResponseResult.data;
 			}
 		}
 	};

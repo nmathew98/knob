@@ -16,7 +16,9 @@ export default function registerClientKey(context: ServeContext) {
 		registerClientKey: {
 			type: new GraphQLNonNull(ClientRegistrationInformation),
 			args: {
-				clientKey: GraphQLID,
+				clientKey: {
+					type: GraphQLID,
+				},
 			},
 			resolve: async (_: any, { clientKey }: RegisterClientKeyArguments) =>
 				await registerClientKey(clientKey),

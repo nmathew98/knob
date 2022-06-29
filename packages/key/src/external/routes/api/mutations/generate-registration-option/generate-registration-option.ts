@@ -62,10 +62,10 @@ const PublicKeyCredentialCreationOptionsJSON = new GraphQLObjectType({
 			type: new GraphQLNonNull(GraphQLString),
 		},
 		allowCredentials: {
-			type: PublicKeyCredentialDescriptorJSON,
+			type: RegistrationPublicKeyCredentialDescriptorJSON,
 		},
 		extensions: {
-			type: AuthenticationExtensionsClientInputs,
+			type: RegistrationExtensionsClientInputs,
 		},
 	}),
 });
@@ -79,8 +79,8 @@ const PublicKeyCredentialUserEntityJSON = new GraphQLObjectType({
 	}),
 });
 
-const PublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
-	name: "PublicKeyCredentialDescriptorJSON",
+const RegistrationPublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
+	name: "RegistrationPublicKeyCredentialDescriptorJSON",
 	fields: () => ({
 		id: {
 			type: new GraphQLNonNull(GraphQLString),
@@ -91,8 +91,8 @@ const PublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
 	}),
 });
 
-const AuthenticationExtensionsClientInputs = new GraphQLObjectType({
-	name: "AuthenticationExtensionsClientInputs",
+const RegistrationExtensionsClientInputs = new GraphQLObjectType({
+	name: "RegistrationExtensionsClientInputs",
 	fields: () => ({
 		appid: {
 			type: GraphQLString,

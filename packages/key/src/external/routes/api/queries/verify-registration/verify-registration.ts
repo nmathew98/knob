@@ -3,10 +3,10 @@ import {
 	GraphQLBoolean,
 	GraphQLNonNull,
 	GraphQLID,
-	GraphQLObjectType,
 	GraphQLString,
 	GraphQLList,
 	GraphQLInt,
+	GraphQLInputObjectType,
 } from "graphql";
 
 export default function verifyAuthentication(context: ServeContext) {
@@ -49,7 +49,7 @@ interface VerifyRegistrationArguments {
 	credential: Record<string, any>;
 }
 
-const RegistrationCredentialJSON = new GraphQLObjectType({
+const RegistrationCredentialJSON = new GraphQLInputObjectType({
 	name: "RegistrationCredentialJSON",
 	fields: () => ({
 		rawId: {
@@ -59,7 +59,7 @@ const RegistrationCredentialJSON = new GraphQLObjectType({
 			type: new GraphQLNonNull(AuthenticatorAttestationResponseJSON),
 		},
 		clientExtensionResults: {
-			type: new GraphQLNonNull(AuthenticationExtensionsClientOutputs),
+			type: new GraphQLNonNull(RegistrationExtensionsClientOutputs),
 		},
 		transports: {
 			type: new GraphQLList(GraphQLString),
@@ -67,7 +67,7 @@ const RegistrationCredentialJSON = new GraphQLObjectType({
 	}),
 });
 
-const AuthenticatorAttestationResponseJSON = new GraphQLObjectType({
+const AuthenticatorAttestationResponseJSON = new GraphQLInputObjectType({
 	name: "AuthenticatorAttestationResponseJSON",
 	fields: () => ({
 		clientDataJSON: {
@@ -79,15 +79,15 @@ const AuthenticatorAttestationResponseJSON = new GraphQLObjectType({
 	}),
 });
 
-const AuthenticationExtensionsClientOutputs = new GraphQLObjectType({
-	name: "AuthenticationExtensionsClientOutputs",
+const RegistrationExtensionsClientOutputs = new GraphQLInputObjectType({
+	name: "RegistrationExtensionsClientOutputs",
 	fields: () => ({
 		appid: {
 			type: GraphQLBoolean,
 		},
 		credProps: {
-			type: new GraphQLObjectType({
-				name: "CredentialPropertiesOutput",
+			type: new GraphQLInputObjectType({
+				name: "RegistrationCredentialPropertiesOutput",
 				fields: () => ({
 					rk: {
 						type: GraphQLBoolean,

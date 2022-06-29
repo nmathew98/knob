@@ -4,7 +4,7 @@ const buildQuery = (uuid: string, clientKey: string, expiresIn?: number) => ({
 			__args: {
 				uuid,
 				clientKey,
-				expiresIn,
+				expiresIn: !expiresIn ? null : expiresIn,
 			},
 		},
 	},
