@@ -16,8 +16,7 @@ export default function onVerification(
 	doesModuleExist(context, "Database", "Authorization");
 
 	const Database: DatabasePubSub = context.get("Database");
-	const Authorization: Pick<Authorization, "get"> =
-		context.get("Authorization");
+	const Authorization: Authorization = context.get("Authorization");
 
 	return Object.freeze({
 		onVerification: {
@@ -37,6 +36,7 @@ export default function onVerification(
 				_: any,
 				{ uuid, clientKey, expiresIn }: OnVerificationArguments,
 			) {
+				const isAuthorized = await Authorization.verify(request, { clientKey });
 				const verificationEvents = new Channel();
 
 				const client = await Database.subscribe("verification", message => {
@@ -55,7 +55,10 @@ export default function onVerification(
 
 				for await (const event of verificationEvents) {
 					if (event) {
-						const { uuid, secret } = event as Record<string, any>;
+						const { uuid, secret, verified } = event as Record<string, any>;
+
+						if (!verified)
+							yield "unverified";
 
 						const token = await Authorization.get(request, {
 							sub: uuid,
@@ -63,7 +66,25 @@ export default function onVerification(
 							expiresIn: expiresIn || 3.6 * Math.pow(10, 6), // Default: 1 hour
 						});
 
-						yield token;
+						/**
+						 * If the request is authorized appropriately we return a token
+						 *
+						 * If the request is not authorized we only send back their verification
+						 * status to indicate if the user is verified or not so that
+						 * any updates to the UI can happen
+						 */
+						if (isAuthorized) {
+							// Add authorization cookie and token on verification
+							response.setHeader("Authorization", `Bearer ${token as string}`);
+							H3.setCookie(response.event, "authorization", token as string);
+
+							// Remove KAS authorization
+							response.setHeader("KAS-AUTHORIZATION", "");
+							response.setHeader("kas-authorization", "");
+							H3.setCookie(response.event, "kas-authorization", "");
+
+							yield token;
+						} else yield "verified";
 					}
 				}
 			},

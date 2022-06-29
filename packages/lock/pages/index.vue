@@ -16,19 +16,31 @@
 	} from "@simplewebauthn/browser";
 	import { Ref } from "vue";
 
+	const isRequestValid = () => {
+		const request = useRequestHeaders();
+
+		return !!(request["KAS-REDIRECT-TO"] || request["kas-redirect-to"]);
+	};
+
+	const isRouteValid = () => {
+		const route = useRoute();
+		const { query } = route;
+
+		return !!(query.authentication || query.registration) && !!query.clientKey;
+	};
+
+	onMounted(() => {
+		if (process.env.NODE_ENV === "production")
+			if (!isRequestValid() || !isRouteValid())
+				window.location.href = "https://rickrolled.com/";
+	});
+
 	const request = useRequestHeaders();
 	const route = useRoute();
 	const query = route.query;
 	const invalid = ref(false);
 
-	if (
-		(!query.authentication && !query.registration) ||
-		(query.authentication && query.registration) ||
-		!query.clientKey ||
-		!(request["KAS-REDIRECT-TO"] || request["kas-redirect-to"]) ||
-		!browserSupportsWebauthn()
-	)
-		invalid.value = true;
+	if (!browserSupportsWebauthn()) invalid.value = true;
 
 	let redirectTo: string | URL =
 		request["KAS-REDIRECT-TO"] || request["kas-redirect-to"];
@@ -90,38 +102,27 @@
 	}
 
 	const verificationOptionMutation = useMutation(generateOptionQuery);
-
-	const qrCodeUri = useFrontend();
-	const searchParams = new URLSearchParams();
-
-	if (query.authentication)
-		searchParams.append("authentication", `${query.authentication}`);
-	else searchParams.append("registration", `${query.registration}`);
-	searchParams.append("clientKey", `${query.clientKey}`);
-	searchParams.append("redirect", "false");
-
-	let verificationResponse: Ref<Record<string, any>> = ref();
+	const authorizationResponse: Ref<Record<string, any>> = ref();
+	const verificationResponseResult = useQuery({
+		query: verificationQuery(
+			authorizationResponse.value as
+				| AuthenticationCredentialJSON
+				| RegistrationCredentialJSON,
+		),
+		pause: computed(() => !authorizationResponse.value),
+	});
 
 	const authenticateUser = async () => {
-		let authorizationResponse: Record<string, any>;
-
 		if (query.registration) {
-			await verificationOptionMutation.executeMutation(Object.create(null));
+			await verificationOptionMutation.executeMutation(null);
 
 			if (verificationOptionMutation.data) {
 				try {
-					authorizationResponse = await startRegistration(
+					authorizationResponse.value = await startRegistration(
 						verificationOptionMutation.data.value,
 					);
 
-					const verifiedResponseResult = await useQuery({
-						query: verificationQuery(
-							authorizationResponse as RegistrationCredentialJSON,
-						),
-					});
-
-					if (verifiedResponseResult.data)
-						verificationResponse.value = verifiedResponseResult.data;
+					await verificationResponseResult;
 				} catch (error: any) {
 					invalid.value = true;
 
@@ -133,22 +134,15 @@
 		}
 
 		if (query.authentication) {
-			await verificationOptionMutation.executeMutation(Object.create(null));
+			await verificationOptionMutation.executeMutation(null);
 
 			if (verificationOptionMutation.data) {
 				try {
-					authorizationResponse = await startAuthentication(
+					authorizationResponse.value = await startAuthentication(
 						verificationOptionMutation.data.value,
 					);
 
-					const verifiedResponseResult = await useQuery({
-						query: verificationQuery(
-							authorizationResponse as AuthenticationCredentialJSON,
-						),
-					});
-
-					if (verifiedResponseResult.data)
-						verificationResponse.value = verifiedResponseResult.data;
+					await verificationResponseResult;
 				} catch (error: any) {
 					invalid.value = true;
 				}
@@ -167,6 +161,15 @@
 			}
 		});
 	});
+
+	const qrCodeUri = useFrontend();
+	const searchParams = new URLSearchParams();
+
+	if (query.authentication)
+		searchParams.append("authentication", `${query.authentication}`);
+	else searchParams.append("registration", `${query.registration}`);
+	searchParams.append("clientKey", `${query.clientKey}`);
+	searchParams.append("redirect", "false");
 
 	const authorizationToken = ref("");
 	/**
