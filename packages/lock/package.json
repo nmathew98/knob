@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"@headlessui/vue": "^1.6.5",
+		"@urql/vue": "^0.6.3",
 		"graphql": "^16.5.0",
 		"graphql-sse": "^1.2.3",
 		"json-to-graphql-query": "^2.2.4",
