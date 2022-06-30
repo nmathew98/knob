@@ -26,21 +26,22 @@
 		const route = useRoute();
 		const { query } = route;
 
-		return !!(query.authentication || query.registration) && !!query.clientKey;
+		return (
+			!!(query.authentication || query.registration) &&
+			!!query.clientKey &&
+			!(query.authentication && query.registration) &&
+			Object.keys(query).every(key => typeof query[key] === "string")
+		);
 	};
-
-	onMounted(() => {
-		if (process.env.NODE_ENV === "production")
-			if (!isRequestValid() || !isRouteValid())
-				window.location.href = "https://rickrolled.com/";
-	});
 
 	const request = useRequestHeaders();
 	const route = useRoute();
 	const query = route.query;
 	const invalid = ref(false);
-
-	if (!browserSupportsWebauthn()) invalid.value = true;
+	const doesBrowserSupportWebAuthn = ref(false);
+	const isMobile = ref(false);
+	const errors = ref([]);
+	const redirect = ref(false);
 
 	let redirectTo: string | URL =
 		request["KAS-REDIRECT-TO"] || request["kas-redirect-to"];
@@ -48,10 +49,20 @@
 		redirectTo = new URL(redirectTo);
 	} catch (error: any) {
 		invalid.value = true;
+		errors.value.push("Invalid redirect URL");
 	}
 
-	for (const key in query)
-		if (typeof query[key] !== "string") invalid.value = true;
+	const isUserAgentMobile = () =>
+		/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+	onMounted(() => {
+		doesBrowserSupportWebAuthn.value = browserSupportsWebauthn();
+		isMobile.value = isUserAgentMobile();
+
+		if (process.env.NODE_ENV === "production")
+			if (!isRequestValid() || !isRouteValid())
+				if (window) window.location.href = "https://rickrolled.com/";
+	});
 
 	let onVerificationQuery: string;
 	let generateOptionQuery: string;
@@ -113,6 +124,8 @@
 	});
 
 	const authenticateUser = async () => {
+		if (!browserSupportsWebauthn) return;
+
 		if (query.registration) {
 			await verificationOptionMutation.executeMutation(null);
 
@@ -126,9 +139,9 @@
 				} catch (error: any) {
 					invalid.value = true;
 
-					if (error.name === "InvalidStateError") {
-						// Authenticator already registered
-					}
+					if (error.name === "InvalidStateError")
+						errors.value.push("Authenticator already registered");
+					else errors.value.push("Unexpected error occured");
 				}
 			}
 		}
@@ -145,10 +158,25 @@
 					await verificationResponseResult;
 				} catch (error: any) {
 					invalid.value = true;
+					errors.value.push("Unexpected error occured");
 				}
 			}
 		}
 	};
+
+	watch(verificationResponseResult.error, () => {
+		if (verificationResponseResult.error) {
+			errors.value = [
+				...errors.value,
+				...verificationResponseResult.error.value.graphQLErrors,
+			];
+
+			if (verificationResponseResult.error.value.networkError)
+				errors.value.push(
+					verificationResponseResult.error.value.networkError.message,
+				);
+		}
+	});
 
 	onMounted(() => {
 		document.addEventListener("keydown", async event => {
@@ -169,9 +197,9 @@
 		searchParams.append("authentication", `${query.authentication}`);
 	else searchParams.append("registration", `${query.registration}`);
 	searchParams.append("clientKey", `${query.clientKey}`);
-	searchParams.append("redirect", "false");
 
-	const authorizationToken = ref("");
+	const authorizationToken = ref();
+	const verified = ref();
 	/**
 	 * This is a one off subscription maybe it's better to
 	 * just use Wonka streams and the client directly
@@ -181,24 +209,76 @@
 			query: onVerificationQuery,
 		},
 		(_, response) => {
-			if (!authorizationToken.value)
-				authorizationToken.value = response.onVerification;
+			if (!authorizationToken.value) {
+				redirect.value = true;
+
+				if (response.onVerification === "unverified") {
+					verified.value = false;
+					errors.value.push("Authentication failed");
+				} else {
+					verified.value = true;
+
+					if (response.onVerification !== "verified") {
+						authorizationToken.value = response.onVerification;
+						redirect.value = true;
+					}
+				}
+			}
 		},
 	);
+
+	onMounted(() => {
+		watch(redirect, () => {
+			if (redirect.value)
+				setTimeout(() => {
+					const searchParams = new URLSearchParams();
+					if (authorizationToken.value)
+						searchParams.append("authorization", authorizationToken.value);
+
+					let redirectUri = (redirectTo as URL).href;
+					if (authorizationToken.value)
+						redirectUri = `${redirectUri}?${searchParams.toString()}`;
+
+					window.location.href = redirectUri;
+				}, 5000);
+		});
+	});
 </script>
 
 <template>
 	<NuxtLayout name="default">
-		<div v-if="!invalid" class="flex flex-col gap-y-10 items-center px-6">
-			<h1 class="text-base md:text-lg font-semibold max-w-md text-center">
-				Scan the QR code below on your mobile device to authenticate with your
-				phone
-			</h1>
-			<QrCode :value="`${`${qrCodeUri}?${searchParams.toString()}`}`"></QrCode>
+		<div class="flex flex-col gap-y-10 items-center px-6">
+			<div class="text-base md:text-lg font-semibold max-w-xl text-center">
+				<h1 v-if="!isMobile">
+					Scan the QR code below on your mobile device to authenticate with your
+					phone
+				</h1>
+				<h1 v-if="doesBrowserSupportWebAuthn && isMobile">
+					Tap the QR code to begin authentication
+				</h1>
+				<h1 v-if="!doesBrowserSupportWebAuthn && isMobile">
+					Unsupported browser
+				</h1>
+			</div>
+
+			<QrCode
+				:value="`${`${qrCodeUri}?${searchParams.toString()}`}`"
+				@click="authenticateUser"
+				class="cursor-pointer"></QrCode>
+
 			<h3
-				class="text-sm md:text-md font-light max-w-md text-center uppercase -mt-10">
-				or insert a security key on your computer
+				v-if="doesBrowserSupportWebAuthn && !isMobile"
+				class="text-sm md:text-md font-light max-w-xl text-center uppercase -mt-10">
+				or insert a security key on your computer and click the QR code
 			</h3>
+
+			<div class="flex flex-col">
+				<template v-if="invalid" v-for="error in errors" :key="error">
+					<span class="text-base max-w-xl uppercase text-red-500">
+						{{ error }}
+					</span>
+				</template>
+			</div>
 		</div>
 	</NuxtLayout>
 </template>

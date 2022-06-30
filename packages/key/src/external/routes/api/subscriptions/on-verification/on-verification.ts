@@ -57,13 +57,14 @@ export default function onVerification(
 					if (event) {
 						const { uuid, secret, verified } = event as Record<string, any>;
 
-						if (!verified)
-							yield "unverified";
+						if (!verified) yield "unverified";
+
+						const maxAge = expiresIn || 3.6 * Math.pow(10, 6); // Default: 1 hour
 
 						const token = await Authorization.get(request, {
 							sub: uuid,
 							secret,
-							expiresIn: expiresIn || 3.6 * Math.pow(10, 6), // Default: 1 hour
+							expiresIn: maxAge,
 						});
 
 						/**
@@ -76,7 +77,10 @@ export default function onVerification(
 						if (isAuthorized) {
 							// Add authorization cookie and token on verification
 							response.setHeader("Authorization", `Bearer ${token as string}`);
-							H3.setCookie(response.event, "authorization", token as string);
+							H3.setCookie(response.event, "authorization", token as string, {
+								secure: process.env.NODE_ENV === "production",
+								maxAge,
+							});
 
 							// Remove KAS authorization
 							response.setHeader("KAS-AUTHORIZATION", "");
