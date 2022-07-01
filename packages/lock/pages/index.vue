@@ -124,7 +124,7 @@
 	});
 
 	const authenticateUser = async () => {
-		if (!browserSupportsWebauthn) return;
+		if (!browserSupportsWebauthn()) return;
 
 		if (query.registration) {
 			await verificationOptionMutation.executeMutation(null);
@@ -210,8 +210,6 @@
 		},
 		(_, response) => {
 			if (!authorizationToken.value) {
-				redirect.value = true;
-
 				if (response.onVerification === "unverified") {
 					verified.value = false;
 					errors.value.push("Authentication failed");

@@ -74,21 +74,22 @@ export default function onVerification(
 						 * status to indicate if the user is verified or not so that
 						 * any updates to the UI can happen
 						 */
-						if (isAuthorized) {
-							// Add authorization cookie and token on verification
-							response.setHeader("Authorization", `Bearer ${token as string}`);
-							H3.setCookie(response.event, "authorization", token as string, {
-								secure: process.env.NODE_ENV === "production",
-								maxAge,
-							});
 
-							// Remove KAS authorization
-							response.setHeader("KAS-AUTHORIZATION", "");
-							response.setHeader("kas-authorization", "");
-							H3.setCookie(response.event, "kas-authorization", "");
+						if (!isAuthorized) yield "verified";
 
-							yield token;
-						} else yield "verified";
+						// Add authorization cookie and token on verification
+						response.setHeader("Authorization", `Bearer ${token as string}`);
+						H3.setCookie(response.event, "authorization", token as string, {
+							secure: process.env.NODE_ENV === "production",
+							maxAge,
+						});
+
+						// Remove KAS authorization
+						response.setHeader("KAS-AUTHORIZATION", "");
+						response.setHeader("kas-authorization", "");
+						H3.setCookie(response.event, "kas-authorization", "");
+
+						yield token;
 					}
 				}
 			},
