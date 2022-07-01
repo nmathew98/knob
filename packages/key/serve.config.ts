@@ -1,4 +1,10 @@
 export default {
+	server: {
+		spdy: {
+			key: "./localhost+2-key.pem",
+			cert: "./localhost+2.pem",
+		},
+	},
 	sentry: {
 		dsn: "",
 		tracesSampleRate: 1.0,

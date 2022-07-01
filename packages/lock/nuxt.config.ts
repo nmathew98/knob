@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { defineNuxtConfig } from "nuxt";
 
 // https://v3.nuxtjs.org/docs/directory-structure/nuxt.config
@@ -31,6 +33,17 @@ export default defineNuxtConfig({
 	vue: {
 		compilerOptions: {
 			isCustomElement: (tag: string) => tag.startsWith("ion-"),
+		},
+	},
+	vite: {
+		server: {
+			https: {
+				key: readFileSync(resolve(__dirname, "./localhost+2-key.pem")),
+				cert: readFileSync(resolve(__dirname, "./localhost+2.pem")),
+			},
+			hmr: {
+				protocol: "wss",
+			},
 		},
 	},
 });

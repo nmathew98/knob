@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"scripts": {
-		"dev": "nuxt dev",
+		"dev": "nuxt dev --https --ssl-cert localhost+2.pem --ssl-key localhost+2-key.pem",
 		"build": "nuxt build",
 		"start": "node .output/server/index.mjs",
 		"lint": "eslint --ext .ts --ignore-path .gitignore . --fix",
