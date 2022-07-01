@@ -6,6 +6,7 @@ import {
 	GraphQLList,
 	GraphQLBoolean,
 	GraphQLID,
+	GraphQLInt,
 } from "graphql";
 
 export default function generateRegistrationOption(context: ServeContext) {
@@ -55,26 +56,22 @@ interface GenerateRegistrationOptionArguments {
 const PublicKeyCredentialCreationOptionsJSON = new GraphQLObjectType({
 	name: "PublicKeyCredentialCreationOptionsJSON",
 	fields: () => ({
-		user: {
-			type: new GraphQLNonNull(PublicKeyCredentialUserEntityJSON),
-		},
 		challenge: {
 			type: new GraphQLNonNull(GraphQLString),
 		},
 		allowCredentials: {
-			type: RegistrationPublicKeyCredentialDescriptorJSON,
+			type: new GraphQLNonNull(
+				new GraphQLList(RegistrationPublicKeyCredentialDescriptorJSON),
+			),
+		},
+		timeout: {
+			type: new GraphQLNonNull(GraphQLInt),
+		},
+		userVerification: {
+			type: new GraphQLNonNull(GraphQLString),
 		},
 		extensions: {
 			type: RegistrationExtensionsClientInputs,
-		},
-	}),
-});
-
-const PublicKeyCredentialUserEntityJSON = new GraphQLObjectType({
-	name: "PublicKeyCredentialUserEntityJSON",
-	fields: () => ({
-		id: {
-			type: new GraphQLNonNull(GraphQLString),
 		},
 	}),
 });

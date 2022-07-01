@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import buildGenerateRegistrationOptionQuery from "~~/graphql/index/generate-authentication-option";
+	import buildGenerateRegistrationOptionQuery from "~~/graphql/index/generate-registration-option";
 	import buildGenerateAuthenticationOptionQuery from "~~/graphql/index/generate-authentication-option";
 	import buildOnVerificationQuery from "~~/graphql/index/on-verification";
 	import buildVerifyAuthenticationQuery, {
@@ -14,7 +14,7 @@
 		startRegistration,
 		browserSupportsWebauthn,
 	} from "@simplewebauthn/browser";
-	import { Ref } from "vue";
+	import { handleError, Ref } from "vue";
 
 	const isRequestValid = () => {
 		const request = useRequestHeaders();
@@ -126,10 +126,26 @@
 	const authenticateUser = async () => {
 		if (!browserSupportsWebauthn()) return;
 
+		const handleErrors = () => {
+			if (verificationOptionMutation.error.value) {
+				errors.value = [
+					...errors.value,
+					...verificationOptionMutation.error.value.graphQLErrors,
+				];
+
+				if (verificationResponseResult.error.value.networkError)
+					errors.value.push(
+						verificationOptionMutation.error.value.networkError.message,
+					);
+			}
+		};
+
 		if (query.registration) {
 			await verificationOptionMutation.executeMutation(null);
 
-			if (verificationOptionMutation.data) {
+			handleErrors();
+
+			if (verificationOptionMutation.data.value) {
 				try {
 					authorizationResponse.value = await startRegistration(
 						verificationOptionMutation.data.value,
@@ -141,13 +157,15 @@
 
 					if (error.name === "InvalidStateError")
 						errors.value.push("Authenticator already registered");
-					else errors.value.push("Unexpected error occured");
+					else errors.value.push(error?.message);
 				}
 			}
 		}
 
 		if (query.authentication) {
 			await verificationOptionMutation.executeMutation(null);
+
+			handleErrors();
 
 			if (verificationOptionMutation.data) {
 				try {
@@ -158,7 +176,7 @@
 					await verificationResponseResult;
 				} catch (error: any) {
 					invalid.value = true;
-					errors.value.push("Unexpected error occured");
+					errors.value.push(error?.message);
 				}
 			}
 		}

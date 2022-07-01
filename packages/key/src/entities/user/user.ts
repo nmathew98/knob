@@ -94,19 +94,26 @@ export default function buildMakeUser({
 
 				const secret = await Crypto.random();
 
-				const secrets = (await Database.find({ store: "secrets" })) || {
+				const storedSecrets = await Database.find({ store: "secrets" });
+				const secrets = storedSecrets || {
 					store: "secrets",
 				};
 				secrets[keyToUse] = secret;
 
-				const clientKeys = (await Database.find({ store: "clientKeys" })) || {
+				const storedClientKey = await Database.find({ store: "clientKeys" });
+				const clientKeys = storedClientKey || {
 					store: "clientKeys",
 					keys: [],
 				};
 				if (!clientKeys.keys.includes(keyToUse)) clientKeys.keys.push(keyToUse);
 
-				await Database.update({ store: "secrets" }, secrets);
-				await Database.update({ store: "clientKeys" }, clientKeys);
+				if (!storedSecrets)
+					await Database.create({ store: "secrets" }, secrets);
+				else await Database.update({ store: "secrets" }, secrets);
+
+				if (!storedClientKey)
+					await Database.create({ store: "clientKeys" }, clientKeys);
+				else await Database.update({ store: "clientKeys" }, clientKeys);
 
 				return { secret, key: keyToUse };
 			},
