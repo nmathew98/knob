@@ -1,13 +1,6 @@
 import { doesModuleExist, ServeContext } from "@skulpture/serve";
-import {
-	GraphQLBoolean,
-	GraphQLNonNull,
-	GraphQLID,
-	GraphQLString,
-	GraphQLList,
-	GraphQLInt,
-	GraphQLInputObjectType,
-} from "graphql";
+import { GraphQLBoolean, GraphQLNonNull, GraphQLID } from "graphql";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 export default function verifyAuthentication(context: ServeContext) {
 	doesModuleExist(context, "User", "WebAuthn", "Database");
@@ -32,7 +25,7 @@ export default function verifyAuthentication(context: ServeContext) {
 					type: new GraphQLNonNull(GraphQLID),
 				},
 				credential: {
-					type: new GraphQLNonNull(RegistrationCredentialJSON),
+					type: new GraphQLNonNull(GraphQLJSONObject),
 				},
 			},
 			resolve: async (
@@ -48,55 +41,3 @@ interface VerifyRegistrationArguments {
 	clientKey: string;
 	credential: Record<string, any>;
 }
-
-const RegistrationCredentialJSON = new GraphQLInputObjectType({
-	name: "RegistrationCredentialJSON",
-	fields: () => ({
-		rawId: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		response: {
-			type: new GraphQLNonNull(AuthenticatorAttestationResponseJSON),
-		},
-		clientExtensionResults: {
-			type: new GraphQLNonNull(RegistrationExtensionsClientOutputs),
-		},
-		transports: {
-			type: new GraphQLList(GraphQLString),
-		},
-	}),
-});
-
-const AuthenticatorAttestationResponseJSON = new GraphQLInputObjectType({
-	name: "AuthenticatorAttestationResponseJSON",
-	fields: () => ({
-		clientDataJSON: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		attestationObject: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-	}),
-});
-
-const RegistrationExtensionsClientOutputs = new GraphQLInputObjectType({
-	name: "RegistrationExtensionsClientOutputs",
-	fields: () => ({
-		appid: {
-			type: GraphQLBoolean,
-		},
-		credProps: {
-			type: new GraphQLInputObjectType({
-				name: "RegistrationCredentialPropertiesOutput",
-				fields: () => ({
-					rk: {
-						type: GraphQLBoolean,
-					},
-				}),
-			}),
-		},
-		uvm: {
-			type: new GraphQLList(new GraphQLList(GraphQLInt)),
-		},
-	}),
-});
