@@ -130,12 +130,12 @@
 			if (verificationOptionMutation.error.value) {
 				errors.value = [
 					...errors.value,
-					...verificationOptionMutation.error.value.graphQLErrors,
+					...(verificationOptionMutation.error.value?.graphQLErrors ?? []),
 				];
 
-				if (verificationResponseResult.error.value.networkError)
+				if (verificationResponseResult.error.value?.networkError)
 					errors.value.push(
-						verificationOptionMutation.error.value.networkError.message,
+						verificationOptionMutation.error.value?.networkError.message,
 					);
 			}
 		};
@@ -148,7 +148,7 @@
 			if (verificationOptionMutation.data.value) {
 				try {
 					authorizationResponse.value = await startRegistration(
-						verificationOptionMutation.data.value,
+						verificationOptionMutation.data.value.generateRegistrationOption,
 					);
 
 					await verificationResponseResult;
@@ -170,7 +170,7 @@
 			if (verificationOptionMutation.data) {
 				try {
 					authorizationResponse.value = await startAuthentication(
-						verificationOptionMutation.data.value,
+						verificationOptionMutation.data.value.generateAuthenticationOption,
 					);
 
 					await verificationResponseResult;
@@ -186,12 +186,12 @@
 		if (verificationResponseResult.error) {
 			errors.value = [
 				...errors.value,
-				...verificationResponseResult.error.value.graphQLErrors,
+				...(verificationResponseResult.error.value?.graphQLErrors ?? []),
 			];
 
-			if (verificationResponseResult.error.value.networkError)
+			if (verificationResponseResult.error.value?.networkError)
 				errors.value.push(
-					verificationResponseResult.error.value.networkError.message,
+					verificationResponseResult.error.value?.networkError.message,
 				);
 		}
 	});

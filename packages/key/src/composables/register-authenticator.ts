@@ -1,5 +1,5 @@
 import { WebAuthn } from "@adapters/web-authn/web-authn";
-import { User, UserRecord } from "@entities/user/user";
+import { Authenticator, User, UserRecord } from "@entities/user/user";
 
 export default function buildRegisterAuthenticator({
 	User,
@@ -15,8 +15,10 @@ export default function buildRegisterAuthenticator({
 
 		if (!foundUser) throw new Error("Invalid user");
 
-		const authenticationOptions =
-			WebAuthn.generateAuthenticationOptions(foundUser);
+		const authenticationOptions = WebAuthn.generateRegistrationOptions(
+			user.uuid,
+			foundUser.authenticators as Authenticator[],
+		);
 
 		const updatedUser = { ...foundUser };
 		updatedUser.challenge = authenticationOptions.challenge;
