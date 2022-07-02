@@ -5,19 +5,6 @@ const buildQuery = (uuid: string, clientKey: string) => ({
 				uuid,
 				clientKey,
 			},
-			challenge: true,
-			allowCredentials: {
-				id: true,
-				transports: true,
-			},
-			timeout: true,
-			userVerification: true,
-			extensions: {
-				appid: true,
-				appidExclude: true,
-				credProps: true,
-				uvm: true,
-			},
 		},
 	},
 });

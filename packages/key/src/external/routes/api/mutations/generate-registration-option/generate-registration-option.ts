@@ -1,13 +1,6 @@
 import { doesModuleExist, ServeContext } from "@skulpture/serve";
-import {
-	GraphQLString,
-	GraphQLObjectType,
-	GraphQLNonNull,
-	GraphQLList,
-	GraphQLBoolean,
-	GraphQLID,
-	GraphQLInt,
-} from "graphql";
+import { GraphQLNonNull, GraphQLID } from "graphql";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 export default function generateRegistrationOption(context: ServeContext) {
 	doesModuleExist(context, "User", "WebAuthn");
@@ -20,7 +13,7 @@ export default function generateRegistrationOption(context: ServeContext) {
 
 	return Object.freeze({
 		generateRegistrationOption: {
-			type: PublicKeyCredentialCreationOptionsJSON,
+			type: new GraphQLNonNull(GraphQLJSONObject),
 			args: {
 				uuid: {
 					type: new GraphQLNonNull(GraphQLID),
@@ -52,56 +45,3 @@ interface GenerateRegistrationOptionArguments {
 	uuid: string;
 	clientKey: string;
 }
-
-const PublicKeyCredentialCreationOptionsJSON = new GraphQLObjectType({
-	name: "PublicKeyCredentialCreationOptionsJSON",
-	fields: () => ({
-		challenge: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		allowCredentials: {
-			type: new GraphQLNonNull(
-				new GraphQLList(RegistrationPublicKeyCredentialDescriptorJSON),
-			),
-		},
-		timeout: {
-			type: new GraphQLNonNull(GraphQLInt),
-		},
-		userVerification: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		extensions: {
-			type: RegistrationExtensionsClientInputs,
-		},
-	}),
-});
-
-const RegistrationPublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
-	name: "RegistrationPublicKeyCredentialDescriptorJSON",
-	fields: () => ({
-		id: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		transports: {
-			type: new GraphQLList(GraphQLString),
-		},
-	}),
-});
-
-const RegistrationExtensionsClientInputs = new GraphQLObjectType({
-	name: "RegistrationExtensionsClientInputs",
-	fields: () => ({
-		appid: {
-			type: GraphQLString,
-		},
-		appidExclude: {
-			type: GraphQLString,
-		},
-		credProps: {
-			type: GraphQLString,
-		},
-		uvm: {
-			type: GraphQLBoolean,
-		},
-	}),
-});

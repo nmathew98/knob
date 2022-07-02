@@ -1,12 +1,6 @@
 import { doesModuleExist, ServeContext } from "@skulpture/serve";
-import {
-	GraphQLString,
-	GraphQLObjectType,
-	GraphQLNonNull,
-	GraphQLList,
-	GraphQLBoolean,
-	GraphQLID,
-} from "graphql";
+import { GraphQLNonNull, GraphQLID } from "graphql";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 export default function generateAuthenticationOption(context: ServeContext) {
 	doesModuleExist(context, "User", "WebAuthn");
@@ -17,7 +11,7 @@ export default function generateAuthenticationOption(context: ServeContext) {
 
 	return Object.freeze({
 		generateAuthenticationOption: {
-			type: PublicKeyCredentialRequestOptionsJSON,
+			type: new GraphQLNonNull(GraphQLJSONObject),
 			args: {
 				uuid: {
 					type: new GraphQLNonNull(GraphQLID),
@@ -38,48 +32,3 @@ interface GenerateAuthenticationOptionArguments {
 	uuid: string;
 	clientKey: string;
 }
-
-const PublicKeyCredentialRequestOptionsJSON = new GraphQLObjectType({
-	name: "PublicKeyCredentialRequestOptionsJSON",
-	fields: () => ({
-		challenge: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		allowCredentials: {
-			type: new GraphQLList(AuthenticationPublicKeyCredentialDescriptorJSON),
-		},
-		extensions: {
-			type: AuthenticationExtensionsClientInputs,
-		},
-	}),
-});
-
-const AuthenticationPublicKeyCredentialDescriptorJSON = new GraphQLObjectType({
-	name: "AuthenticationPublicKeyCredentialDescriptorJSON",
-	fields: () => ({
-		id: {
-			type: new GraphQLNonNull(GraphQLString),
-		},
-		transports: {
-			type: new GraphQLList(GraphQLString),
-		},
-	}),
-});
-
-const AuthenticationExtensionsClientInputs = new GraphQLObjectType({
-	name: "AuthenticationExtensionsClientInputs",
-	fields: () => ({
-		appid: {
-			type: GraphQLString,
-		},
-		appidExclude: {
-			type: GraphQLString,
-		},
-		credProps: {
-			type: GraphQLString,
-		},
-		uvm: {
-			type: GraphQLBoolean,
-		},
-	}),
-});
