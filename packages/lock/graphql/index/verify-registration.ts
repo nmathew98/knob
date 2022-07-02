@@ -1,7 +1,9 @@
+/*eslint @typescript-eslint/no-explicit-any: "off" */
+
 const buildQuery = (
 	uuid: string,
 	clientKey: string,
-	credential: RegistrationCredentialJSON,
+	credential: Record<string, any>,
 ) => ({
 	query: {
 		verifyRegistration: {
@@ -15,23 +17,3 @@ const buildQuery = (
 });
 
 export default buildQuery;
-
-export interface RegistrationCredentialJSON {
-	rawId: string;
-	response: AuthenticatorAttestationResponseJSON;
-	clientExtensionResults: AuthenticationExtensionsClientOutputs;
-	transports: string[];
-}
-
-export interface AuthenticatorAttestationResponseJSON {
-	clientDataJSON: string;
-	attestationObject: string;
-}
-
-export interface AuthenticationExtensionsClientOutputs {
-	appid?: boolean;
-	credProps?: {
-		rk?: boolean;
-	};
-	uvm?: number[][];
-}

@@ -2,19 +2,15 @@
 	import buildGenerateRegistrationOptionQuery from "~~/graphql/index/generate-registration-option";
 	import buildGenerateAuthenticationOptionQuery from "~~/graphql/index/generate-authentication-option";
 	import buildOnVerificationQuery from "~~/graphql/index/on-verification";
-	import buildVerifyAuthenticationQuery, {
-		AuthenticationCredentialJSON,
-	} from "~~/graphql/index/verify-authentication";
-	import buildVerifyRegistrationQuery, {
-		RegistrationCredentialJSON,
-	} from "~~/graphql/index/verify-registration";
+	import buildVerifyAuthenticationQuery from "~~/graphql/index/verify-authentication";
+	import buildVerifyRegistrationQuery from "~~/graphql/index/verify-registration";
 	import { useQuery, useMutation, useSubscription } from "@urql/vue";
 	import {
 		startAuthentication,
 		startRegistration,
 		browserSupportsWebauthn,
 	} from "@simplewebauthn/browser";
-	import { handleError, Ref } from "vue";
+	import { Ref } from "vue";
 
 	const isRequestValid = () => {
 		const request = useRequestHeaders();
@@ -66,9 +62,7 @@
 
 	let onVerificationQuery: string;
 	let generateOptionQuery: string;
-	let verificationQuery: (
-		credential: AuthenticationCredentialJSON | RegistrationCredentialJSON,
-	) => string;
+	let verificationQuery: (credential: Record<string, any>) => string;
 	{
 		onVerificationQuery = createQuery(
 			buildOnVerificationQuery(
@@ -93,7 +87,7 @@
 			);
 
 		if (query.authentication)
-			verificationQuery = (credential: AuthenticationCredentialJSON) =>
+			verificationQuery = credential =>
 				createQuery(
 					buildVerifyAuthenticationQuery(
 						query.authentication as string,
@@ -102,7 +96,7 @@
 					),
 				);
 		else
-			verificationQuery = (credential: RegistrationCredentialJSON) =>
+			verificationQuery = credential =>
 				createQuery(
 					buildVerifyRegistrationQuery(
 						query.authentication as string,
@@ -116,9 +110,7 @@
 	const authorizationResponse: Ref<Record<string, any>> = ref();
 	const verificationResponseResult = useQuery({
 		query: verificationQuery(
-			authorizationResponse.value as
-				| AuthenticationCredentialJSON
-				| RegistrationCredentialJSON,
+			authorizationResponse.value as Record<string, any>,
 		),
 		pause: computed(() => !authorizationResponse.value),
 	});
