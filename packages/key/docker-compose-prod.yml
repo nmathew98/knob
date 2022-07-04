@@ -1,0 +1,23 @@
+version: "3"
+services:
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+  mongo:
+    extends:
+      file: docker-compose.yml
+      service: mongo
+  api:
+    extends:
+      file: docker-compose.yml
+      service: api
+    build:
+      args:
+        PROFILE: production
+    command: npm run start
+networks:
+  redis:
+    driver: bridge
+  mongo:
+    driver: bridge
